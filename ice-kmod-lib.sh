@@ -84,6 +84,11 @@ is_kmod_loaded() {
 }
 
 build_kmods() {
+
+    if [ "$(kvc_c_env)" == "kubernetes" ]; then
+        return 0
+    fi
+
     # Check to see if it's already built
     if [ -n "$(kvc_c_images "$IMAGE" --quiet 2>/dev/null)" ]; then
         echo "The ${IMAGE} kernel module container is already built"
@@ -117,9 +122,16 @@ build_kmods() {
 load_kmods() {
     echo "Loading kernel modules using the kernel module container..."
     for module in ${KMOD_NAMES}; do
-        module=${module//-/_} # replace any dashes with underscore
-        kvc_c_run --privileged "$IMAGE" rmmod "${module}"
-        kvc_c_run --privileged "$IMAGE" modprobe "${module}"
+
+        kabi_check_module "${module}.ko"
+
+        if is_kmod_loaded "${module}"; then
+            echo "Kernel module ${module} already loaded"
+        else
+            module=${module//-/_} # replace any dashes with underscore
+            # TODO kvc_c_run --privileged $IMAGE modprobe ${module}
+            modprobe "${module}"
+        fi
     done
 }
 
@@ -137,5 +149,5 @@ unload_kmods() {
 
 wrapper() {
     echo "Running userspace wrapper using the kernel module container..."
-    kvc_c_run --privileged "$IMAGE" "$@"
+    # TODO kvc_c_run --privileged "$IMAGE" "$@"
 }
