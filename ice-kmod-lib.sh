@@ -130,6 +130,7 @@ load_kmods() {
         else
             module=${module//-/_} # replace any dashes with underscore
             # TODO kvc_c_run --privileged $IMAGE modprobe ${module}
+            rmmod "{$module}" || true
             modprobe "${module}"
         fi
     done
