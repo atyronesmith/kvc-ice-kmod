@@ -125,12 +125,13 @@ load_kmods() {
 
         kabi_check_module "${module}"
 
+        rmmod "{$module}" || true
+
         if is_kmod_loaded "${module}"; then
             echo "Kernel module ${module} already loaded"
         else
             module=${module//-/_} # replace any dashes with underscore
             # TODO kvc_c_run --privileged $IMAGE modprobe ${module}
-            rmmod "{$module}" || true
             modprobe "${module}"
         fi
     done
